@@ -1,10 +1,12 @@
 import json 
 
+# Classe para armazenar chave e texto
 class Simples:
   def __init__(self, chave, texto):
     self.chave = chave
     self.texto = texto
 
+# Funcao para facilitar gravar token
 def gravarToken(char, texto, line, indice):
   return {
     "grupo": char,
@@ -33,6 +35,7 @@ def analisadorLexico(programa):
   quaseComentario = False
   indiceToken = 0
 
+  # Lista de caracteres simples, para conseguir realizar as validacoes de todos os caracteres que sao simples
   simples = [
     Simples(':', "dois-pontos"),
     Simples(')', "fecha-parenteses"),
@@ -46,6 +49,7 @@ def analisadorLexico(programa):
 
   for c in programa:
     # Comentario
+    # Verificando se inicia com -, apos isso ele verifica se o proximo tbm tem - para poder validar como comentario
     if c == '-' and not comentario:
       if quaseComentario:
           comentario = True
@@ -59,10 +63,12 @@ def analisadorLexico(programa):
       tokens.append(gravarToken("comentario", textoToken, line, indiceToken))
     elif comentario:
       textoToken += c
+    # Caso nao seja comentario, executa o resto das regras
     else:
         grupo = ''
 
         # Operador Diferente
+        # Verifica se comeca com "!"
         if c == '!':
           if quaseOperadorDiferente == False:
             indiceToken = indice
@@ -70,15 +76,19 @@ def analisadorLexico(programa):
             quaseOperadorDiferente = True
           else: 
             quaseOperadorDiferente = False
+        # Se o proxima caracter for igual a "=" entao marca como true a variavel operadorDiferente para ele poder salvar o token depois
         elif quaseOperadorDiferente and c == '=':
             operadorDiferente = True
             grupo = "operador-diferente"
             quaseOperadorDiferente = False
+        # Se nao reseta as duas flags
         else: 
             operadorDiferente = False
-            
+
         # Atribuicao
+        # Verifica se contem ":"
         if c == ':':
+          # Verifica se o proximo tbm vai conter :, para assim marcar como atribuicao
           if quaseAtribuicao:
               atribuicao = True
               grupo = "atribuicao"
@@ -90,18 +100,26 @@ def analisadorLexico(programa):
         else: 
           quaseAtribuicao = False
 
+        # Se for atribuicao ou diferente, entao grava um dos dois
         if atribuicao or operadorDiferente:
-            print ('1')
             textoToken += c
             tokens.append(gravarToken(grupo, textoToken, line, indiceToken))
             atribuicao = False
         else:
+          # Se nao executa a lista
+          # Executa a lista de caracteres simples para poder gerar um token deles, caso for igual a algum da lista
           for simple in simples:
+            textoToken = c
             if simple.chave == c:
-              textoToken = c
               tokens.append(gravarToken(simple.texto, textoToken, line, indice))
+            else: 
+                # Como eu nao implementei todas as regras vai conter muitos "erros"
+                # Trata erro
+                erros.append(gravarToken("desconhecido", textoToken, line, indice))
 
     # Quebra-linha
+    # Faz contagem de indice e linha
+    # Grava token de quebra linha
     if c == '\n':
       textoToken = c
       tokens.append(gravarToken("quebra-linha", textoToken, line, indice))
